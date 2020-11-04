@@ -1,11 +1,17 @@
-import random,csv, sys, os, base64, itertools
+import random
+import csv
+import sys
+import os
+import base64
+import itertools
+import time
 
 # DHM Functions
 def isPrime(n):
     """"pre-condition: n is a nonnegative integer
     post-condition: return True if n is prime and False otherwise."""
     if n < 2:
-         return False;
+        return False
     if n % 2 == 0:
          return n == 2  # return False
     k = 3
