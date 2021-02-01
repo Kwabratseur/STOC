@@ -29,7 +29,11 @@ def GetRand(Range = 10**5, LB = 10**1):
     return random.randint(LB,Range)
 
 def GetPrime(p,Pr):
-    return next(i for i in [random.randint(p,Pr)|1 for x in itertools.count()] if isPrime(i))
+    x = 0
+    while isPrime(x) == False:
+        x = random.randint(p,Pr)
+    return x
+    #return next(i for i in [random.randint(p,Pr)|1 for x in itertools.count()] if isPrime(i))
 
 #Generate public key: A = g^a mod p, also generates secret key.
 def PubKey(p,g,a):
@@ -156,12 +160,11 @@ def xor_crypt_V2(data, key='awesomepassword',HashKey=None, encode=False, decode=
         return xored[Klen:]
     return xored
 
-def Save(File="data",data = None,folder = None):
+def Save(File="data",pre="ponyisland",data = None,folder = None):
     if folder is not None:
         folder = folder
     else:
         folder = ""
-    pre = "ponyisland"
     ext0 = ".sf"
     ext1 = ".mlp"
     if data is not None: # save data
@@ -184,68 +187,21 @@ def Save(File="data",data = None,folder = None):
         #print data1.replace("\n",""), data2
         return [data1.replace("\n","").replace("\r",""),data2.replace("\n","").replace("\r","")]
 
-def Fromfile(file_name = "data",folder_loc = ""):
-    result, Key = Save(File = file_name, folder = folder_loc)
+def Fromfile(file_name = "data",PreFix = "ponyisland",folder_loc = ""):
+    result, Key = Save(File = file_name,pre=PreFix, folder = folder_loc)
     Decoded = xor_crypt_V2(result,key=Key, decode=True,debug = False)
     print("decrypted {} to {}".format(result,Decoded))
     return Decoded
 
-def Tofile(data,file_name = "data",folder_loc = ""):
+def Tofile(data,file_name = "data",PreFix = "ponyisland",folder_loc = ""):
     Key = Randstr(len(data))
     Key,Hkey = InitVector(Key)
     result = xor_crypt_V2(data, key=Key,HashKey=Hkey,encode=True,debug = False)
     print("Encrypted {} to {}".format(data,result))
-    Save(File = file_name,data = [result,Key], folder = folder_loc)
+    Save(File = file_name, pre=PreFix, data = [result,Key], folder = folder_loc)
 
 def main():
-    """Short summary.
-
-    Returns
-    -------
-    type
-        string encoded/decoded
-
-    Raises
-    -------
-    ExceptionName
-        Why the exception is raised.
-
-    Examples
-    -------
-    Examples should be written in doctest format, and
-    should illustrate how to use the function/class.
-    >>>
-
-    """
-    if len(sys.argv) == 1:
-        print("Interactive mode")
-        mode = input("Mode; Encrypt/Decrypt(E/D):")
-
-        if mode == "E":
-            secret_data = input("Secret data to encrypt:")
-            Tofile(secret_data)
-        else:
-            ret = Fromfile()
-            return ret
-
-    elif len(sys.argv) == 2:
-        datakey = sys.argv[2]
-        if datakey != "D":
-            print("Encrypting {}".format(datakey))
-            Tofile(datakey)
-        else:
-            ret = Fromfile()
-            return ret
-    else:
-        mode = sys.argv[1]
-        file_name = sys.argv[2]
-        folder_loc = sys.argv[3]
-        if mode == "E": # encrypt
-            secret_data = sys.argv[4]
-            Tofile(secret_data,file_name=file_name,folder_loc = folder_loc)
-        else: # decrypt
-            ret = Fromfile(file_name=file_name,folder_loc = folder_loc)
-            return ret
+    print(Fromfile())
 
 
 if __name__ == "__main__":
@@ -255,4 +211,4 @@ if __name__ == "__main__":
     except RuntimeError:
         print("Error!")
 else:
-    print("file is being imported")
+    print("---\n{}\n---\nis being imported\n---".format(sys.argv[0]))
