@@ -6,12 +6,15 @@ HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
 
 def decoder(Data):
-    Data = Data.split(",")
-    Data[0] = Data[0].split('[')[1]
-    Data[0] = Data[0].split("'")[1]
-    Data[1] = Data[1].split("'")[0]
-    Data[-1] = Data[-1].split(']')[0]
-    return Data
+    try:
+        Data = Data.split(",")
+        Data[0] = Data[0].split('[')[1]
+        Data[0] = Data[0].split("'")[1]
+        Data[1] = Data[1].split("'")[0]
+        Data[-1] = Data[-1].split(']')[0]
+        return Data
+    except:
+        return [0,0,0,0]
 
 def DecodeArray(Data):
     a2 = Data.decode("utf-8")
@@ -32,7 +35,7 @@ def RecvMsg(HOST,PORT,Msg = "standardmsg"):
                     break
                 return data
 
-def SM_Server(step,PN,msg=""):
+def SM_Server(step,PN,Ready,msg=""):
     data = RecvMsg(HOST,PORT,Msg=msg)
     Message = "Message_Unchanged"
     step += 1
@@ -46,14 +49,12 @@ def SM_Server(step,PN,msg=""):
             step = 0
             PN = []
             Message = "Error - authentication"
-        # generate p,g,a
-        # calculate A
-        # send p,g,A
     elif step == 2:
         print(data,type(data))
         print("{} Negotiating - 1.1 {}".format(step,data))
         if data == b"CPUB,pgB":
             print(PN)
+            Message = "1.2"
         else:
             print("Reset at step {}".format(step))
             step = 0
@@ -67,10 +68,13 @@ def SM_Server(step,PN,msg=""):
             PN.append(int(Data[4]))
             PN.append(PubKey(PN[1],PN[4],a))
             print(PN)
+            Message = "Ready"
         print("{} Response - 1.2: {}".format(step,Message))
         # keys are setup, communication is secure
-
-    return [step,PN,Message]
+    elif step > 3:
+        print("COM: {} - {}".format(step,data))
+        Ready = True
+    return [step,PN,Message,Ready]
 
 
 step = 0
@@ -83,7 +87,8 @@ print("Finished getting public numbers")
 A = PubKey(p,g,a)
 print("Finished getting public key")
 PN = ["SPUB,pgA",p,g,A]
-Message = str(PN)
+Message = "Hellur"
+Ready = False
 print("Starting")
 while True:
-    step, PN, Message = SM_Server(step,PN,Message)
+    step, PN, Message, Ready = SM_Server(step,PN,Ready,Message)

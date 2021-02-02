@@ -5,12 +5,15 @@ import time
 HOST = '127.0.0.1'  # The server's hostname or IP address
 PORT = 65432        # The port used by the server
 def decoder(Data):
-    Data = Data.split(",")
-    Data[0] = Data[0].split('[')[1]
-    Data[0] = Data[0].split("'")[1]
-    Data[1] = Data[1].split("'")[0]
-    Data[-1] = Data[-1].split(']')[0]
-    return Data
+    try:
+        Data = Data.split(",")
+        Data[0] = Data[0].split('[')[1]
+        Data[0] = Data[0].split("'")[1]
+        Data[1] = Data[1].split("'")[0]
+        Data[-1] = Data[-1].split(']')[0]
+        return Data
+    except:
+        return [0,0,0,0]
 
 def DecodeArray(Data):
     a2 = Data.decode("utf-8")
@@ -31,44 +34,55 @@ def SendMsg(HOST,PORT,msg):
     except:
         print("Oopsie")
 
-def SM_Client(step,PN):
+def SM_Client(step,PN, Ready,Message):
     step += 1
     if step == 1:
         print("{} Handshaking - 0.1 {}".format(step,b"ConnectDHM"))
         data = SendMsg(HOST,PORT,b"ConnectDHM")
-        print("{} Response - 0.1: {}".format(step,data))
-        if not data:
+        if data and data == b'Hellur':
+            print("{} Response - 0.1: {}".format(step,data))
+        else:
+            print("{} Error - 0.1: {}".format(step,data))
             step = 0
     if step == 2:
         data = SendMsg(HOST,PORT,b"CPUB,pgB")
         print("{} Negotiating - 1.1 {}".format(step,b"CPUB,pgB"))
         Data = DecodeArray(data)
-        print("{} Response - 1.1: {}".format(step,Data))
-        PN = ["CPUB,pgB",int(Data[2]),int(Data[3]),int(Data[4])]
-        B = PubKey(PN[1],PN[2],b)
-        PN.insert(3,B)
-        print("Generating Public Key:{}".format(PN))
-        if not data:
+        print(Data)
+        if Data[0] == "SPUB":
+            print("{} Response - 1.1: {}".format(step,Data))
+            PN = ["CPUB,pgB",int(Data[2]),int(Data[3]),int(Data[4])]
+            B = PubKey(PN[1],PN[2],b)
+            PN.insert(3,B)
+            print("Generating Public Key:{}".format(PN))
+        else:
+            print("{} Error - 1.1: {}".format(step,data))
             step = 1
 
     if step == 3:
         print("{} Negotiating - 1.2 {}".format(step,PN))
         data = SendMsg(HOST,PORT,str.encode(str(PN[:-1])))
-        PN.append(PubKey(PN[1],PN[4],b))
-        print("{} Response - 1.2: {}".format(step,data))
-        print(PN)
-        if not data:
+        if data and data == b"1.2":
+            PN.append(PubKey(PN[1],PN[4],b))
+            print("{} Response - 1.2: {}".format(step,data))
+        else:
             step = 2
-    return [step,PN,Message]
+            print("{} ERROR - 1.2: {}".format(step,data))
+    elif step > 3:
+        Ready = True
+        data = SendMsg(HOST,PORT,str.encode(Message))
+        print("COM:{} - {}".format(step,data))
+    return [step,PN,Message,Ready]
 
 
 
 step = 0
 PN = []
 Message = ""
+Ready = False
 b = GetRand(10**4,10**1)
 while True:
-    step, PN, Message = SM_Client(step,PN)
+    step, PN, Message, Ready = SM_Client(step,PN, Ready,Message)
     time.sleep(5)
 
 
