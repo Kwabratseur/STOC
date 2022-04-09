@@ -193,45 +193,17 @@ def Save(File="data",pre="ponyisland",data = None,folder = None):
         #print data1.replace("\n",""), data2
         return [data1.replace("\n","").replace("\r",""),data2.replace("\n","").replace("\r","")]
 
-def ECCD(decrypted,arr):
-    Array = decrypted[2:-1].replace('x','').split('\\')[1:]
-    for i, x in enumerate(Array):
-        if len(str(x)) > 2:
-            if type(x) == type(10):
-                Array[i] = x
-            else:
-                Array.insert(i+1,x[2:])
-                Array[i] = x[:2]
-        try:
-            Array[i] = int(x,16)
-            if int(x,16) > 256:
-                remainder = int(x,16)
-                while remainder > 256:
-                    remainder = remainder/256
-                    Array.insert(i,256)
-                Array.insert(i,int(remainder))
-        except:
-            Array[i] = 0
-    print("Restored {} % of original data.".format((len(Array)/len(arr[0]))*100))
-    for i in range(len(arr[0]) - len(Array)):
-        Array.append(0)
-    return bytes(Array)
-
 def ObfuscateImage(image):
-    arr = []
     im = Image.open(image)
     #im.frombytes(StrImg)
     StrImg = im.tobytes()
-    arr.append(StrImg)
-    encryptord = Tofile(StrImg)
+    encryptord = Tofile(StrImg.decode())
     decryptord = Fromfile()
-    arr.append(encryptord)
-    arr.append(decryptord)
-    im.frombytes(ECCD(decryptord,arr))
+    im.frombytes(str.encode(decryptord))
     im.save("DETuxSC.ppm")
     im.frombytes(encryptord)
     im.save("ETuxSC.ppm")
-    return arr
+
 
 def Fromfile(file_name = "data",PreFix = "ponyisland",folder_loc = "", debug=False):
     result, Key = Save(File = file_name,pre=PreFix, folder = folder_loc)

@@ -8,7 +8,7 @@ setup(
     author_email='jeroen.vantende@outlook.com',
     url='https://github.com/Kwabratseur/STOC',
     packages=['obscuresecure'],
-    scripts=['bin/'],
-    install_requires=[
+    #scripts=['bin/'],
+    install_requires=["PIL"
     ],
 )
